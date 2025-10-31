@@ -1,10 +1,11 @@
 import pino from 'pino';
+import pretty from 'pino-pretty';
 
 /**
- * Simplified Next.js Logger with PM2-friendly output
+ * Next.js Logger with PM2-friendly output
  *
  * Production (PM2): Outputs structured JSON logs for Loki/Grafana
- * Development: Pretty-printed logs for easy terminal reading
+ * Development: Pretty-printed logs WITHOUT worker threads (Next.js compatible)
  */
 
 // Browser logger (no-op client-side)
@@ -41,21 +42,24 @@ const createServerLogger = () => {
     });
   }
 
-  // Development: Pretty output for terminal
-  return pino({
-    level: process.env.LOG_LEVEL || 'debug',
-    base: baseConfig,
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
-        ignore: 'pid,hostname',
-        singleLine: false,
-        messageFormat: '{msg}',
-      },
-    },
+  // Development: Pretty output WITHOUT worker threads
+  // Using pino-pretty as a destination stream (not transport)
+  // This avoids "worker has exited" errors in Next.js HMR
+  const prettyStream = pretty({
+    colorize: true,
+    translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
+    ignore: 'pid,hostname',
+    singleLine: false,
+    messageFormat: '{msg}',
   });
+
+  return pino(
+    {
+      level: process.env.LOG_LEVEL || 'debug',
+      base: baseConfig,
+    },
+    prettyStream
+  );
 };
 
 // Export the appropriate logger
