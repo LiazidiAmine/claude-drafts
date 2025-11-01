@@ -140,15 +140,33 @@ pm2 link <secret_key> <public_key>
 
 ## Troubleshooting
 
-### "Worker has exited" Error
+### "Can't resolve 'worker_threads'" Error
 
-If you see this error in Next.js development:
+If you see this error in Next.js:
+
+```
+⨯ Module not found: Can't resolve 'worker_threads'
+```
+
+**Solution:** This is a webpack bundling issue. Use the default `lib/logger.ts` which outputs JSON only, and pipe through pino-pretty:
+
+```bash
+npm run dev:pretty
+# or
+npm run dev 2>&1 | npx pino-pretty
+```
+
+See [NEXTJS_WEBPACK_FIX.md](./NEXTJS_WEBPACK_FIX.md) for detailed explanation and alternative solutions.
+
+### "Worker has exited" Error (Old Issue)
+
+If you see this error:
 
 ```
 ⨯ uncaughtException: Error: the worker has exited
 ```
 
-**Solution:** The logger has been updated to avoid worker threads. Make sure you're using the latest version that uses `pretty()` as a destination stream, not `pino.transport()`.
+**Solution:** Don't use `pino.transport()` in Next.js. Use the default logger (JSON output) instead.
 
 See [NEXTJS_HMR_FIX.md](./NEXTJS_HMR_FIX.md) for details.
 

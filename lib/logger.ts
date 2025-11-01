@@ -1,11 +1,19 @@
 import pino from 'pino';
-import pretty from 'pino-pretty';
 
 /**
  * Next.js Logger with PM2-friendly output
  *
  * Production (PM2): Outputs structured JSON logs for Loki/Grafana
- * Development: Pretty-printed logs WITHOUT worker threads (Next.js compatible)
+ * Development: JSON output (pipe through pino-pretty if needed)
+ *
+ * IMPORTANT: This logger outputs JSON in both dev and prod.
+ * For pretty logs in development, pipe the output:
+ *   npm run dev | npx pino-pretty
+ *
+ * Why JSON in dev too?
+ * - Avoids Next.js webpack bundling issues (pino-pretty has Node.js deps)
+ * - Prevents "worker_threads" errors on client-side
+ * - Simple, reliable, no bundling complexity
  */
 
 // Browser logger (no-op client-side)
@@ -19,7 +27,7 @@ const createBrowserLogger = () => ({
   child: () => createBrowserLogger(),
 });
 
-// Server logger with environment-specific configuration
+// Server logger - JSON output in all environments
 const createServerLogger = () => {
   const isDev = process.env.NODE_ENV === 'development';
   const isProd = process.env.NODE_ENV === 'production';
@@ -30,38 +38,16 @@ const createServerLogger = () => {
     version: process.env.NEXT_PUBLIC_APP_VERSION || 'unknown',
   };
 
-  // Production: Simple JSON output for PM2/Loki/Grafana
-  if (isProd) {
-    return pino({
-      level: process.env.LOG_LEVEL || 'info',
-      base: baseConfig,
-      // Clean JSON output - PM2 handles the rest
-      formatters: {
-        level: (label) => ({ level: label }),
-      },
-    });
-  }
-
-  // Development: Pretty output WITHOUT worker threads
-  // Using pino-pretty as a destination stream (not transport)
-  // This avoids "worker has exited" errors in Next.js HMR
-  const prettyStream = pretty({
-    colorize: true,
-    translateTime: 'SYS:yyyy-mm-dd HH:MM:ss',
-    ignore: 'pid,hostname',
-    singleLine: false,
-    messageFormat: '{msg}',
-  });
-
-  return pino(
-    {
-      level: process.env.LOG_LEVEL || 'debug',
-      base: baseConfig,
+  return pino({
+    level: isDev ? (process.env.LOG_LEVEL || 'debug') : (process.env.LOG_LEVEL || 'info'),
+    base: baseConfig,
+    formatters: {
+      level: (label) => ({ level: label }),
     },
-    prettyStream
-  );
+  });
 };
 
 // Export the appropriate logger
 export const logger =
   typeof window !== 'undefined' ? createBrowserLogger() : createServerLogger();
+
