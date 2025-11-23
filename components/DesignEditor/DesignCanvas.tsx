@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Text, Transformer, Rect, Group } from 'react-konva';
+import { Stage, Layer, Text, Transformer, Rect, Group } from 'react-konva';
 import { useCustomizerStore } from '@/store/useCustomizerStore';
 import { DESIGN_CONSTRAINTS, FONTS } from '@/lib/constants';
 import Konva from 'konva';
@@ -14,40 +14,21 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   const { front, back, currentSide, updateDesign, updateText } = useCustomizerStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [designImage, setDesignImage] = useState<HTMLImageElement | null>(null);
 
   const stageRef = useRef<Konva.Stage>(null);
-  const imageRef = useRef<Konva.Image>(null);
+  const emojiRef = useRef<Konva.Text>(null);
   const textRef = useRef<Konva.Text>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
 
   const currentCanvas = currentSide === 'front' ? front : back;
   const { design, text } = currentCanvas;
 
-  // Load design image
-  useEffect(() => {
-    if (design?.imageUrl) {
-      const img = new window.Image();
-      img.src = design.imageUrl;
-      img.onload = () => {
-        setDesignImage(img);
-      };
-      img.onerror = () => {
-        // Placeholder for missing images
-        console.log('Design image not found, using placeholder');
-        setDesignImage(null);
-      };
-    } else {
-      setDesignImage(null);
-    }
-  }, [design?.imageUrl]);
-
   // Attach transformer to selected element
   useEffect(() => {
     if (!transformerRef.current) return;
 
-    if (selectedId === 'design' && imageRef.current) {
-      transformerRef.current.nodes([imageRef.current]);
+    if (selectedId === 'design' && emojiRef.current) {
+      transformerRef.current.nodes([emojiRef.current]);
     } else if (selectedId === 'text' && textRef.current) {
       transformerRef.current.nodes([textRef.current]);
     } else {
@@ -66,9 +47,9 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   };
 
   const handleDesignTransformEnd = () => {
-    if (!design || !imageRef.current) return;
+    if (!design || !emojiRef.current) return;
 
-    const node = imageRef.current;
+    const node = emojiRef.current;
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
 
@@ -227,46 +208,29 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             offsetX={60}
           />
 
-          {/* Design image or placeholder */}
+          {/* Design emoji */}
           {design && (
-            designImage ? (
-              <KonvaImage
-                ref={imageRef}
-                image={designImage}
-                x={design.x}
-                y={design.y}
-                width={design.width}
-                height={design.height}
-                rotation={design.rotation}
-                draggable
-                onClick={() => setSelectedId('design')}
-                onTap={() => setSelectedId('design')}
-                onDragEnd={handleDesignDragEnd}
-                onTransformEnd={handleDesignTransformEnd}
-                shadowColor="#A855F7"
-                shadowBlur={selectedId === 'design' ? 15 : 5}
-                shadowOpacity={0.5}
-              />
-            ) : (
-              /* Emoji placeholder for logos/designs */
-              <Group
-                x={design.x}
-                y={design.y}
-                draggable
-                onClick={() => setSelectedId('design')}
-                onTap={() => setSelectedId('design')}
-              >
-                <Text
-                  text={design.emoji || '🎨'}
-                  width={design.width}
-                  height={design.height}
-                  fontSize={design.width * 0.7}
-                  fontFamily="Arial"
-                  align="center"
-                  verticalAlign="middle"
-                />
-              </Group>
-            )
+            <Text
+              ref={emojiRef}
+              text={design.emoji || '🎨'}
+              x={design.x}
+              y={design.y}
+              width={design.width}
+              height={design.height}
+              fontSize={design.width * 0.7}
+              fontFamily="Arial"
+              align="center"
+              verticalAlign="middle"
+              rotation={design.rotation}
+              draggable
+              onClick={() => setSelectedId('design')}
+              onTap={() => setSelectedId('design')}
+              onDragEnd={handleDesignDragEnd}
+              onTransformEnd={handleDesignTransformEnd}
+              shadowColor="#A855F7"
+              shadowBlur={selectedId === 'design' ? 15 : 5}
+              shadowOpacity={0.5}
+            />
           )}
 
           {/* Text */}
