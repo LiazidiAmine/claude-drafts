@@ -38,12 +38,38 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     transformerRef.current.getLayer()?.batchDraw();
   }, [selectedId]);
 
+  // Printable area constraints (torso only, excluding collar and sleeves)
+  const PRINTABLE_AREA = {
+    x: 85,
+    y: 120,
+    width: 230,
+    height: 300,
+  };
+
+  const constrainToStagePrintableArea = (x: number, y: number, width: number, height: number) => {
+    return {
+      x: Math.max(PRINTABLE_AREA.x, Math.min(x, PRINTABLE_AREA.x + PRINTABLE_AREA.width - width)),
+      y: Math.max(PRINTABLE_AREA.y, Math.min(y, PRINTABLE_AREA.y + PRINTABLE_AREA.height - height)),
+    };
+  };
+
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    // Deselect when clicking on empty area
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      setSelectedId(null);
+    }
+  };
+
   const handleDesignDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (!design) return;
-    updateDesign({
-      x: e.target.x(),
-      y: e.target.y(),
-    });
+    const constrained = constrainToStagePrintableArea(
+      e.target.x(),
+      e.target.y(),
+      design.width,
+      design.height
+    );
+    updateDesign(constrained);
   };
 
   const handleDesignTransformEnd = () => {
@@ -68,10 +94,13 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
 
   const handleTextDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (!text) return;
-    updateText({
-      x: e.target.x(),
-      y: e.target.y(),
-    });
+    const constrained = constrainToStagePrintableArea(
+      e.target.x(),
+      e.target.y(),
+      e.target.width(),
+      e.target.height()
+    );
+    updateText(constrained);
   };
 
   const handleTextTransformEnd = () => {
@@ -90,20 +119,13 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     node.scaleY(1);
   };
 
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
-    // Deselect when clicking on empty area
-    if (e.target === e.target.getStage()) {
-      setSelectedId(null);
-    }
-  };
-
   const getFontFamily = (font: string) => {
     const fontConfig = FONTS.find(f => f.value === font);
     return fontConfig?.fontFamily || 'Arial, sans-serif';
   };
 
   return (
-    <div className={`border-4 border-blue-400 rounded-lg bg-white shadow-lg ${className}`}>
+    <div className={`rounded-lg bg-white shadow-lg ${className}`}>
       <Stage
         ref={stageRef}
         width={DESIGN_CONSTRAINTS.CANVAS_WIDTH}

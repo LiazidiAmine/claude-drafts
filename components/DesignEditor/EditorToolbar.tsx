@@ -5,9 +5,12 @@ import { useCustomizerStore } from '@/store/useCustomizerStore';
 import { FONTS, TEXT_COLORS, DESIGN_CONSTRAINTS, EMOJI_DESIGNS } from '@/lib/constants';
 import { TextElement, DesignElement, Design } from '@/types';
 
+type DesignTab = 'emoji' | 'icon' | 'design';
+
 export function EditorToolbar() {
   const { front, back, currentSide, addText, updateText, removeText, addDesign, removeDesign } = useCustomizerStore();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showDesignPicker, setShowDesignPicker] = useState(false);
+  const [activeTab, setActiveTab] = useState<DesignTab>('emoji');
 
   const currentCanvas = currentSide === 'front' ? front : back;
   const { design, text } = currentCanvas;
@@ -41,7 +44,7 @@ export function EditorToolbar() {
     };
 
     addDesign(newDesign);
-    setShowEmojiPicker(false);
+    setShowDesignPicker(false);
   };
 
   const handleTextChange = (content: string) => {
@@ -57,12 +60,12 @@ export function EditorToolbar() {
         <h3 className="text-sm font-bold text-gray-900 mb-3">PERSONNALISER</h3>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => setShowEmojiPicker(true)}
+            onClick={() => setShowDesignPicker(true)}
             disabled={!!design}
             className="py-4 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center gap-2"
           >
             <span className="text-3xl">🎨</span>
-            <span>Emoji/Icône</span>
+            <span>Design</span>
           </button>
 
           <button
@@ -77,35 +80,90 @@ export function EditorToolbar() {
 
         {/* Helpful hint */}
         <p className="text-xs text-gray-600 mt-3 text-center bg-gray-50 p-2 rounded">
-          💡 {design || text ? 'Modifiez votre élément ci-dessous' : 'Choisissez un emoji ou ajoutez du texte'}
+          💡 {design || text ? 'Modifiez votre élément ci-dessous' : 'Choisissez un design ou ajoutez du texte'}
         </p>
       </div>
 
-      {/* Emoji picker modal */}
-      {showEmojiPicker && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowEmojiPicker(false)}>
-          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Choisir un emoji</h2>
+      {/* Design picker modal with tabs */}
+      {showDesignPicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowDesignPicker(false)}>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Choisir un design</h2>
             <p className="text-sm text-gray-700 mb-4">
-              Sélectionnez un emoji pour votre t-shirt
+              Sélectionnez un design pour votre t-shirt
             </p>
 
-            <div className="grid grid-cols-4 gap-3">
-              {EMOJI_DESIGNS.map((emoji) => (
-                <button
-                  key={emoji.id}
-                  onClick={() => handleSelectEmoji(emoji)}
-                  className="p-4 border-2 border-gray-300 rounded-lg hover:border-purple-600 hover:bg-purple-50 transition-all flex flex-col items-center gap-1"
-                  title={emoji.name}
-                >
-                  <span className="text-4xl">{emoji.emoji}</span>
-                  <span className="text-[10px] text-gray-600">{emoji.name}</span>
-                </button>
-              ))}
+            {/* Tabs */}
+            <div className="flex gap-2 border-b-2 border-gray-200 mb-4">
+              <button
+                onClick={() => setActiveTab('emoji')}
+                className={`px-4 py-2 font-bold transition-all ${
+                  activeTab === 'emoji'
+                    ? 'text-purple-600 border-b-4 border-purple-600 -mb-[2px]'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                😊 Emoji
+              </button>
+              <button
+                onClick={() => setActiveTab('icon')}
+                className={`px-4 py-2 font-bold transition-all ${
+                  activeTab === 'icon'
+                    ? 'text-purple-600 border-b-4 border-purple-600 -mb-[2px]'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                ⭐ Icône
+              </button>
+              <button
+                onClick={() => setActiveTab('design')}
+                className={`px-4 py-2 font-bold transition-all ${
+                  activeTab === 'design'
+                    ? 'text-purple-600 border-b-4 border-purple-600 -mb-[2px]'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🎨 Design
+              </button>
+            </div>
+
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === 'emoji' && (
+                <div className="grid grid-cols-4 gap-3">
+                  {EMOJI_DESIGNS.map((emoji) => (
+                    <button
+                      key={emoji.id}
+                      onClick={() => handleSelectEmoji(emoji)}
+                      className="p-4 border-2 border-gray-300 rounded-lg hover:border-purple-600 hover:bg-purple-50 transition-all flex flex-col items-center gap-1"
+                      title={emoji.name}
+                    >
+                      <span className="text-4xl">{emoji.emoji}</span>
+                      <span className="text-[10px] text-gray-600">{emoji.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'icon' && (
+                <div className="text-center py-8 text-gray-600">
+                  <span className="text-4xl block mb-2">🚧</span>
+                  <p className="font-bold">Icônes bientôt disponibles</p>
+                  <p className="text-sm mt-1">Cette fonctionnalité sera ajoutée prochainement</p>
+                </div>
+              )}
+
+              {activeTab === 'design' && (
+                <div className="text-center py-8 text-gray-600">
+                  <span className="text-4xl block mb-2">🚧</span>
+                  <p className="font-bold">Designs bientôt disponibles</p>
+                  <p className="text-sm mt-1">Cette fonctionnalité sera ajoutée prochainement</p>
+                </div>
+              )}
             </div>
 
             <button
-              onClick={() => setShowEmojiPicker(false)}
+              onClick={() => setShowDesignPicker(false)}
               className="w-full mt-4 px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 font-bold"
             >
               Annuler
