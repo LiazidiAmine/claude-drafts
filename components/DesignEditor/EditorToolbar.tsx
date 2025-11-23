@@ -36,11 +36,11 @@ export function EditorToolbar() {
   const handleAddLogo = (position: LogoPosition) => {
     const logoConfig = LOGO_POSITIONS[position];
 
-    // Example logo - in real app, this would come from design picker
+    // Using emoji as placeholder - in real app, user would select from library
     const newLogo: DesignElement = {
       id: `logo-${Date.now()}`,
-      designId: 'logo-1',
-      imageUrl: '/designs/logo-1.png',
+      designId: 'emoji-logo',
+      imageUrl: '', // Empty = will use emoji placeholder
       placementType: 'logo',
       logoPosition: position,
       x: logoConfig.x,
@@ -219,6 +219,26 @@ export function EditorToolbar() {
             <div className="flex justify-between text-xs text-gray-600 mt-1">
               <span>Petit</span>
               <span>Grand</span>
+            </div>
+          </div>
+
+          {/* Rotation */}
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Inclinaison: {text.rotation}°
+            </label>
+            <input
+              type="range"
+              min={-45}
+              max={45}
+              value={text.rotation}
+              onChange={(e) => updateText({ rotation: parseInt(e.target.value) })}
+              className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-green-600"
+            />
+            <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <span>↶ -45°</span>
+              <span>0°</span>
+              <span>45° ↷</span>
             </div>
           </div>
 

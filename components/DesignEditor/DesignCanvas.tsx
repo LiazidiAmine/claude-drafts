@@ -156,6 +156,70 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             fill="#F9FAFB"
           />
 
+          {/* T-Shirt Silhouette */}
+          <Group listening={false}>
+            {/* Main body */}
+            <Rect
+              x={75}
+              y={80}
+              width={250}
+              height={350}
+              fill="#FFFFFF"
+              stroke="#D1D5DB"
+              strokeWidth={2}
+              cornerRadius={[10, 10, 15, 15]}
+            />
+
+            {/* Left sleeve */}
+            <Rect
+              x={30}
+              y={80}
+              width={50}
+              height={120}
+              fill="#FFFFFF"
+              stroke="#D1D5DB"
+              strokeWidth={2}
+              cornerRadius={[8, 0, 0, 8]}
+            />
+
+            {/* Right sleeve */}
+            <Rect
+              x={320}
+              y={80}
+              width={50}
+              height={120}
+              fill="#FFFFFF"
+              stroke="#D1D5DB"
+              strokeWidth={2}
+              cornerRadius={[0, 8, 8, 0]}
+            />
+
+            {/* Collar/Neck - V shape */}
+            <Rect
+              x={175}
+              y={70}
+              width={50}
+              height={30}
+              fill="#FFFFFF"
+              stroke="#D1D5DB"
+              strokeWidth={2}
+              cornerRadius={[5, 5, 0, 0]}
+            />
+
+            {/* Label on silhouette */}
+            <Text
+              text="T-SHIRT"
+              x={DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2}
+              y={420}
+              fontSize={10}
+              fontFamily="Arial"
+              fill="#9CA3AF"
+              align="center"
+              offsetX={25}
+              fontStyle="bold"
+            />
+          </Group>
+
           {/* Pattern layer (if exists) - repeating background */}
           {pattern && patternImage && (
             <Group>
@@ -221,7 +285,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
                 shadowOpacity={0.5}
               />
             ) : (
-              /* Placeholder for missing design images */
+              /* Emoji placeholder for logos/designs */
               <Group
                 x={design.x}
                 y={design.y}
@@ -229,25 +293,14 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
                 onClick={() => setSelectedId('design')}
                 onTap={() => setSelectedId('design')}
               >
-                <Rect
-                  width={design.width}
-                  height={design.height}
-                  fill={design.locked ? '#DBEAFE' : '#F3E8FF'}
-                  stroke={design.locked ? '#3B82F6' : '#A855F7'}
-                  strokeWidth={3}
-                  dash={[5, 5]}
-                  cornerRadius={8}
-                />
                 <Text
-                  text={design.locked ? '📍\nLogo' : '🎨\nDesign'}
+                  text={design.locked ? '⭐' : '🎨'}
                   width={design.width}
                   height={design.height}
-                  fontSize={20}
+                  fontSize={design.width * 0.7}
                   fontFamily="Arial"
-                  fill={design.locked ? '#1E40AF' : '#7C3AED'}
                   align="center"
                   verticalAlign="middle"
-                  fontStyle="bold"
                 />
               </Group>
             )
