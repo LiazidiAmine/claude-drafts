@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Text, Transformer, Rect } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Text, Transformer, Rect, Group } from 'react-konva';
 import { useCustomizerStore } from '@/store/useCustomizerStore';
 import { DESIGN_CONSTRAINTS, FONTS } from '@/lib/constants';
 import Konva from 'konva';
@@ -15,6 +15,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [designImage, setDesignImage] = useState<HTMLImageElement | null>(null);
+  const [patternImage, setPatternImage] = useState<HTMLImageElement | null>(null);
 
   const stageRef = useRef<Konva.Stage>(null);
   const imageRef = useRef<Konva.Image>(null);
@@ -22,7 +23,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
 
   const currentCanvas = currentSide === 'front' ? front : back;
-  const { design, text } = currentCanvas;
+  const { design, text, pattern } = currentCanvas;
 
   // Load design image
   useEffect(() => {
@@ -32,16 +33,37 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
       img.onload = () => {
         setDesignImage(img);
       };
+      img.onerror = () => {
+        // Placeholder for missing images
+        console.log('Design image not found, using placeholder');
+        setDesignImage(null);
+      };
     } else {
       setDesignImage(null);
     }
   }, [design?.imageUrl]);
 
+  // Load pattern image
+  useEffect(() => {
+    if (pattern?.imageUrl) {
+      const img = new window.Image();
+      img.src = pattern.imageUrl;
+      img.onload = () => {
+        setPatternImage(img);
+      };
+      img.onerror = () => {
+        setPatternImage(null);
+      };
+    } else {
+      setPatternImage(null);
+    }
+  }, [pattern?.imageUrl]);
+
   // Attach transformer to selected element
   useEffect(() => {
     if (!transformerRef.current) return;
 
-    if (selectedId === 'design' && imageRef.current) {
+    if (selectedId === 'design' && imageRef.current && !design?.locked) {
       transformerRef.current.nodes([imageRef.current]);
     } else if (selectedId === 'text' && textRef.current) {
       transformerRef.current.nodes([textRef.current]);
@@ -50,10 +72,10 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     }
 
     transformerRef.current.getLayer()?.batchDraw();
-  }, [selectedId]);
+  }, [selectedId, design?.locked]);
 
   const handleDesignDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    if (!design) return;
+    if (!design || design.locked) return;
     updateDesign({
       x: e.target.x(),
       y: e.target.y(),
@@ -61,7 +83,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   };
 
   const handleDesignTransformEnd = () => {
-    if (!design || !imageRef.current) return;
+    if (!design || design.locked || !imageRef.current) return;
 
     const node = imageRef.current;
     const scaleX = node.scaleX();
@@ -117,7 +139,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   };
 
   return (
-    <div className={`border-2 border-gray-300 rounded-lg bg-white ${className}`}>
+    <div className={`border-4 border-blue-400 rounded-lg bg-white shadow-lg ${className}`}>
       <Stage
         ref={stageRef}
         width={DESIGN_CONSTRAINTS.CANVAS_WIDTH}
@@ -125,33 +147,110 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
         onClick={handleStageClick}
       >
         <Layer>
+          {/* Background - light gray */}
+          <Rect
+            x={0}
+            y={0}
+            width={DESIGN_CONSTRAINTS.CANVAS_WIDTH}
+            height={DESIGN_CONSTRAINTS.CANVAS_HEIGHT}
+            fill="#F9FAFB"
+          />
+
+          {/* Pattern layer (if exists) - repeating background */}
+          {pattern && patternImage && (
+            <Group>
+              {/* Create a tiled pattern effect */}
+              {Array.from({ length: Math.ceil(DESIGN_CONSTRAINTS.CANVAS_HEIGHT / 100) }).map((_, row) =>
+                Array.from({ length: Math.ceil(DESIGN_CONSTRAINTS.CANVAS_WIDTH / 100) }).map((_, col) => (
+                  <KonvaImage
+                    key={`pattern-${row}-${col}`}
+                    image={patternImage}
+                    x={col * 100}
+                    y={row * 100}
+                    width={100}
+                    height={100}
+                    opacity={0.3}
+                  />
+                ))
+              )}
+            </Group>
+          )}
+
           {/* Print area guide */}
           <Rect
             x={(DESIGN_CONSTRAINTS.CANVAS_WIDTH - DESIGN_CONSTRAINTS.PRINT_AREA_WIDTH) / 2}
             y={(DESIGN_CONSTRAINTS.CANVAS_HEIGHT - DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT) / 2}
             width={DESIGN_CONSTRAINTS.PRINT_AREA_WIDTH}
             height={DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT}
-            stroke="#E5E7EB"
-            strokeWidth={2}
-            dash={[5, 5]}
+            stroke="#93C5FD"
+            strokeWidth={3}
+            dash={[10, 5]}
           />
 
-          {/* Design image */}
-          {design && designImage && (
-            <KonvaImage
-              ref={imageRef}
-              image={designImage}
-              x={design.x}
-              y={design.y}
-              width={design.width}
-              height={design.height}
-              rotation={design.rotation}
-              draggable
-              onClick={() => setSelectedId('design')}
-              onTap={() => setSelectedId('design')}
-              onDragEnd={handleDesignDragEnd}
-              onTransformEnd={handleDesignTransformEnd}
-            />
+          {/* Helper text for print area */}
+          <Text
+            text="Zone d'impression"
+            x={DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2}
+            y={(DESIGN_CONSTRAINTS.CANVAS_HEIGHT - DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT) / 2 - 20}
+            fontSize={12}
+            fontFamily="Arial"
+            fill="#60A5FA"
+            fontStyle="bold"
+            align="center"
+            offsetX={60}
+          />
+
+          {/* Design image or placeholder */}
+          {design && (
+            designImage ? (
+              <KonvaImage
+                ref={imageRef}
+                image={designImage}
+                x={design.x}
+                y={design.y}
+                width={design.width}
+                height={design.height}
+                rotation={design.rotation}
+                draggable={!design.locked}
+                onClick={() => setSelectedId('design')}
+                onTap={() => setSelectedId('design')}
+                onDragEnd={handleDesignDragEnd}
+                onTransformEnd={handleDesignTransformEnd}
+                shadowColor={design.locked ? '#3B82F6' : '#A855F7'}
+                shadowBlur={selectedId === 'design' ? 15 : 5}
+                shadowOpacity={0.5}
+              />
+            ) : (
+              /* Placeholder for missing design images */
+              <Group
+                x={design.x}
+                y={design.y}
+                draggable={!design.locked}
+                onClick={() => setSelectedId('design')}
+                onTap={() => setSelectedId('design')}
+              >
+                <Rect
+                  width={design.width}
+                  height={design.height}
+                  fill={design.locked ? '#DBEAFE' : '#F3E8FF'}
+                  stroke={design.locked ? '#3B82F6' : '#A855F7'}
+                  strokeWidth={3}
+                  dash={[5, 5]}
+                  cornerRadius={8}
+                />
+                <Text
+                  text={design.locked ? '📍\nLogo' : '🎨\nDesign'}
+                  width={design.width}
+                  height={design.height}
+                  fontSize={20}
+                  fontFamily="Arial"
+                  fill={design.locked ? '#1E40AF' : '#7C3AED'}
+                  align="center"
+                  verticalAlign="middle"
+                  fontStyle="bold"
+                />
+              </Group>
+            )
           )}
 
           {/* Text */}
@@ -170,6 +269,21 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               onTap={() => setSelectedId('text')}
               onDragEnd={handleTextDragEnd}
               onTransformEnd={handleTextTransformEnd}
+              shadowColor="#10B981"
+              shadowBlur={selectedId === 'text' ? 15 : 5}
+              shadowOpacity={0.5}
+              fontStyle="bold"
+            />
+          )}
+
+          {/* Locked icon for locked designs */}
+          {design && design.locked && (
+            <Text
+              text="🔒"
+              x={design.x + design.width - 20}
+              y={design.y - 10}
+              fontSize={20}
+              listening={false}
             />
           )}
 
@@ -183,9 +297,22 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               }
               return newBox;
             }}
+            borderStroke="#3B82F6"
+            borderStrokeWidth={3}
+            anchorStroke="#3B82F6"
+            anchorFill="#FFFFFF"
+            anchorSize={12}
+            anchorCornerRadius={6}
           />
         </Layer>
       </Stage>
+
+      {/* Instructions below canvas */}
+      <div className="bg-blue-50 border-t-2 border-blue-400 p-3 text-center">
+        <p className="text-sm font-bold text-blue-900">
+          💡 Cliquez sur un élément pour le sélectionner • Glissez pour déplacer • Utilisez les poignées pour redimensionner
+        </p>
+      </div>
     </div>
   );
 }

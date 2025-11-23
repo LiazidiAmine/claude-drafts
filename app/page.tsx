@@ -33,24 +33,24 @@ export default function Home() {
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold mb-2">Designs exclusifs</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Designs exclusifs</h3>
+            <p className="text-gray-700 leading-relaxed">
               Choisissez parmi une bibliothèque de designs professionnels
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">✏️</div>
-            <h3 className="text-xl font-semibold mb-2">Texte personnalisé</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Texte personnalisé</h3>
+            <p className="text-gray-700 leading-relaxed">
               Ajoutez votre propre texte avec plusieurs polices et couleurs
             </p>
           </div>
 
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-4xl mb-4">🔄</div>
-            <h3 className="text-xl font-semibold mb-2">Vue 3D interactive</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Vue 3D interactive</h3>
+            <p className="text-gray-700 leading-relaxed">
               Visualisez votre création sous tous les angles en temps réel
             </p>
           </div>
@@ -64,32 +64,32 @@ export default function Home() {
               <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 1
               </div>
-              <h4 className="font-semibold mb-2">Choisissez votre t-shirt</h4>
-              <p className="text-sm text-gray-600">Couleur et taille</p>
+              <h4 className="font-bold text-gray-900 mb-2">Choisissez votre t-shirt</h4>
+              <p className="text-sm text-gray-700">Couleur et taille</p>
             </div>
 
             <div className="text-center">
               <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 2
               </div>
-              <h4 className="font-semibold mb-2">Ajoutez des designs</h4>
-              <p className="text-sm text-gray-600">Logos ou texte</p>
+              <h4 className="font-bold text-gray-900 mb-2">Ajoutez des designs</h4>
+              <p className="text-sm text-gray-700">Logos ou texte</p>
             </div>
 
             <div className="text-center">
               <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 3
               </div>
-              <h4 className="font-semibold mb-2">Personnalisez</h4>
-              <p className="text-sm text-gray-600">Position, taille, couleur</p>
+              <h4 className="font-bold text-gray-900 mb-2">Personnalisez</h4>
+              <p className="text-sm text-gray-700">Position, taille, couleur</p>
             </div>
 
             <div className="text-center">
               <div className="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 4
               </div>
-              <h4 className="font-semibold mb-2">Commandez</h4>
-              <p className="text-sm text-gray-600">Livraison rapide</p>
+              <h4 className="font-bold text-gray-900 mb-2">Commandez</h4>
+              <p className="text-sm text-gray-700">Livraison rapide</p>
             </div>
           </div>
         </div>

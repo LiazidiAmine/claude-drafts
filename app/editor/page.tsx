@@ -41,20 +41,20 @@ export default function EditorPage() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setCurrentSide('front')}
-                  className={`py-2 px-4 border-2 rounded-md transition-all font-medium ${
+                  className={`py-3 px-4 border-2 rounded-md transition-all font-bold ${
                     currentSide === 'front'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 hover:border-gray-400'
+                      ? 'border-blue-600 bg-blue-600 text-white'
+                      : 'border-gray-400 bg-white text-gray-900 hover:border-blue-400 hover:bg-blue-50'
                   }`}
                 >
                   Devant
                 </button>
                 <button
                   onClick={() => setCurrentSide('back')}
-                  className={`py-2 px-4 border-2 rounded-md transition-all font-medium ${
+                  className={`py-3 px-4 border-2 rounded-md transition-all font-bold ${
                     currentSide === 'back'
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-300 hover:border-gray-400'
+                      ? 'border-blue-600 bg-blue-600 text-white'
+                      : 'border-gray-400 bg-white text-gray-900 hover:border-blue-400 hover:bg-blue-50'
                   }`}
                 >
                   Arrière

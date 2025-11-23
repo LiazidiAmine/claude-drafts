@@ -45,10 +45,10 @@ export function ProductSelector() {
             <button
               key={size.value}
               onClick={() => setTShirtSize(size.value as TShirtSize)}
-              className={`py-2 px-4 border-2 rounded-md transition-all font-medium ${
+              className={`py-2 px-4 border-2 rounded-md transition-all font-bold ${
                 tshirt.size === size.value
-                  ? 'border-blue-600 bg-blue-50 text-blue-700'
-                  : 'border-gray-300 hover:border-gray-400'
+                  ? 'border-blue-600 bg-blue-600 text-white'
+                  : 'border-gray-400 bg-white text-gray-900 hover:border-blue-400 hover:bg-blue-50'
               }`}
             >
               {size.label}
