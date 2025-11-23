@@ -73,11 +73,6 @@ export function VacationOptimizer() {
       if (minDays > totalDaysInRange) {
         errors.push(`La période sélectionnée (${totalDaysInRange} jours) est trop courte pour obtenir ${minDays} jours off minimum`)
       }
-
-      // Validation: Le minimum de jours off ne peut pas être obtenu avec les jours disponibles
-      if (minDays > days + 2) { // +2 pour inclure au moins un weekend
-        errors.push(`Avec ${days} jour(s) de congés, il est peu probable d'obtenir ${minDays} jours off. Ajustez vos critères.`)
-      }
     }
 
     if (errors.length > 0) {
