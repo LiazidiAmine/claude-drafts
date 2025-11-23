@@ -10,6 +10,7 @@ export interface VacationRequest {
   rangeStart: Date
   rangeEnd: Date
   availableDays: number
+  minDaysOff?: number
   blockedDates: Date[]
 }
 

@@ -6,19 +6,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { optimizeVacation, formatVacationPeriod, getEfficiencyPercentage } from '@/lib/optimizer'
+import { optimizeVacation, formatVacationPeriod } from '@/lib/optimizer'
 import { VacationPeriod } from '@/types'
-import { Calendar, TrendingUp, Clock, Sparkles, X } from 'lucide-react'
+import { Calendar, TrendingUp, Clock, Sparkles, X, Info } from 'lucide-react'
 
 export function VacationOptimizer() {
   const [rangeStart, setRangeStart] = useState('')
   const [rangeEnd, setRangeEnd] = useState('')
   const [availableDays, setAvailableDays] = useState('')
+  const [minDaysOff, setMinDaysOff] = useState('')
   const [blockedDates, setBlockedDates] = useState<Date[]>([])
   const [newBlockedDate, setNewBlockedDate] = useState('')
   const [suggestions, setSuggestions] = useState<VacationPeriod[]>([])
   const [message, setMessage] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   const handleAddBlockedDate = () => {
     if (newBlockedDate) {
@@ -37,8 +39,10 @@ export function VacationOptimizer() {
   const handleOptimize = () => {
     setIsLoading(true)
     setMessage(undefined)
+    setValidationErrors([])
+    const errors: string[] = []
 
-    // Validation
+    // Validation des champs obligatoires
     if (!rangeStart || !rangeEnd || !availableDays) {
       setMessage("Veuillez remplir tous les champs obligatoires")
       setIsLoading(false)
@@ -48,9 +52,36 @@ export function VacationOptimizer() {
     const start = new Date(rangeStart)
     const end = new Date(rangeEnd)
     const days = parseInt(availableDays)
+    const minDays = minDaysOff ? parseInt(minDaysOff) : 0
 
+    // Validations
     if (isNaN(days) || days <= 0) {
-      setMessage("Le nombre de jours doit être un nombre positif")
+      errors.push("Le nombre de jours de congés doit être un nombre positif")
+    }
+
+    if (start >= end) {
+      errors.push("La date de début doit être avant la date de fin")
+    }
+
+    if (minDays < 0 || (minDaysOff && isNaN(minDays))) {
+      errors.push("Le nombre minimum de jours off doit être un nombre positif ou vide")
+    }
+
+    // Validation: La période doit être assez longue pour le minimum de jours off souhaités
+    if (minDays > 0) {
+      const totalDaysInRange = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      if (minDays > totalDaysInRange) {
+        errors.push(`La période sélectionnée (${totalDaysInRange} jours) est trop courte pour obtenir ${minDays} jours off minimum`)
+      }
+
+      // Validation: Le minimum de jours off ne peut pas être obtenu avec les jours disponibles
+      if (minDays > days + 2) { // +2 pour inclure au moins un weekend
+        errors.push(`Avec ${days} jour(s) de congés, il est peu probable d'obtenir ${minDays} jours off. Ajustez vos critères.`)
+      }
+    }
+
+    if (errors.length > 0) {
+      setValidationErrors(errors)
       setIsLoading(false)
       return
     }
@@ -61,6 +92,7 @@ export function VacationOptimizer() {
         rangeStart: start,
         rangeEnd: end,
         availableDays: days,
+        minDaysOff: minDays,
         blockedDates: blockedDates
       })
 
@@ -91,6 +123,62 @@ export function VacationOptimizer() {
             Maximisez vos jours de repos en minimisant vos jours de congés
           </p>
         </div>
+
+        {/* Guide d'utilisation - Onboarding */}
+        <Card className="mb-8 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Info className="w-5 h-5 text-blue-600" />
+              <CardTitle className="text-lg">Comment utiliser cet outil ?</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex gap-3 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                  1
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Définissez votre période</h3>
+                  <p className="text-sm text-gray-600">
+                    Choisissez les dates pendant lesquelles vous souhaitez prendre des congés
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                  2
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Indiquez vos contraintes</h3>
+                  <p className="text-sm text-gray-600">
+                    Nombre de jours de congés disponibles et jours off minimum souhaités
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                  3
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Obtenez les meilleures options</h3>
+                  <p className="text-sm text-gray-600">
+                    L'outil calcule les périodes optimales incluant weekends et jours fériés
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-blue-200">
+              <p className="text-sm text-gray-700 flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <span>
+                  <strong>Astuce :</strong> Plus votre période est flexible, meilleures seront les suggestions.
+                  L'algorithme prend en compte tous les jours fériés français.
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Formulaire */}
@@ -127,17 +215,32 @@ export function VacationOptimizer() {
                 </div>
               </div>
 
-              {/* Jours disponibles */}
-              <div className="space-y-2">
-                <Label htmlFor="available-days">Jours de congés disponibles</Label>
-                <Input
-                  id="available-days"
-                  type="number"
-                  min="1"
-                  placeholder="Ex: 10"
-                  value={availableDays}
-                  onChange={(e) => setAvailableDays(e.target.value)}
-                />
+              {/* Jours disponibles et minimum */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="available-days">Jours de congés disponibles</Label>
+                  <Input
+                    id="available-days"
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 10"
+                    value={availableDays}
+                    onChange={(e) => setAvailableDays(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500">Jours que vous pouvez poser</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="min-days-off">Jours off minimum souhaités</Label>
+                  <Input
+                    id="min-days-off"
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 7 (optionnel)"
+                    value={minDaysOff}
+                    onChange={(e) => setMinDaysOff(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500">Total de jours de repos</p>
+                </div>
               </div>
 
               {/* Dates bloquées */}
@@ -175,6 +278,20 @@ export function VacationOptimizer() {
                   </div>
                 )}
               </div>
+
+              {/* Erreurs de validation */}
+              {validationErrors.length > 0 && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <div className="text-red-600 font-semibold text-sm">Erreurs de validation :</div>
+                  </div>
+                  <ul className="mt-2 space-y-1 text-sm text-red-700 list-disc list-inside">
+                    {validationErrors.map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Bouton optimiser */}
               <Button
@@ -223,54 +340,33 @@ export function VacationOptimizer() {
                     }`}
                   >
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={index === 0 ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {index === 0 ? '🏆 Meilleure' : `#${index + 1}`}
-                          </Badge>
-                          {getEfficiencyPercentage(suggestion.efficiency) > 50 && (
-                            <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                              +{getEfficiencyPercentage(suggestion.efficiency)}% bonus
-                            </Badge>
-                          )}
-                        </div>
+                      <div className="flex items-start justify-between mb-2">
+                        <Badge
+                          variant={index === 0 ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {index === 0 ? '🏆 Meilleure option' : `Option #${index + 1}`}
+                        </Badge>
                       </div>
-                      <CardTitle className="text-lg mt-2">
+                      <CardTitle className="text-lg">
                         {formatVacationPeriod(suggestion)}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="space-y-1">
-                          <p className="text-muted-foreground">Jours à poser</p>
-                          <p className="text-2xl font-bold text-primary">
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-gray-600 mb-2">Jours à poser</p>
+                          <p className="text-3xl font-bold text-blue-600">
                             {suggestion.workDaysToTake}
                           </p>
+                          <p className="text-xs text-gray-500 mt-1">jours de congés</p>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-muted-foreground">Jours off totaux</p>
-                          <p className="text-2xl font-bold text-green-600">
+                        <div className="text-center p-4 bg-green-50 rounded-lg">
+                          <p className="text-sm text-gray-600 mb-2">Jours off totaux</p>
+                          <p className="text-3xl font-bold text-green-600">
                             {suggestion.totalDaysOff}
                           </p>
-                        </div>
-                      </div>
-                      <div className="pt-3 border-t">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Efficacité</span>
-                          <span className="font-semibold text-primary">
-                            {suggestion.efficiency.toFixed(2)}x
-                          </span>
-                        </div>
-                        <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-primary to-green-500"
-                            style={{
-                              width: `${Math.min(suggestion.efficiency * 50, 100)}%`
-                            }}
-                          />
+                          <p className="text-xs text-gray-500 mt-1">jours de repos</p>
                         </div>
                       </div>
                     </CardContent>
@@ -289,27 +385,6 @@ export function VacationOptimizer() {
             )}
           </div>
         </div>
-
-        {/* Informations complémentaires */}
-        <Card className="mt-8 shadow-lg bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-lg">Comment ça marche ?</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2 text-gray-700">
-            <p>
-              ✅ L'optimiseur analyse toutes les périodes possibles dans votre plage de dates
-            </p>
-            <p>
-              ✅ Il prend en compte les weekends et les jours fériés français
-            </p>
-            <p>
-              ✅ Vous obtenez les 5 meilleures suggestions pour maximiser vos jours de repos
-            </p>
-            <p>
-              ✅ L'efficacité montre combien de jours off vous obtenez par jour de congé posé
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

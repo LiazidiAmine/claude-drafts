@@ -58,7 +58,7 @@ function periodContainsBlockedDates(
  * Stratégie: chercher les périodes qui incluent des weekends et jours fériés
  */
 export function optimizeVacation(request: VacationRequest): OptimizationResult {
-  const { rangeStart, rangeEnd, availableDays, blockedDates } = request
+  const { rangeStart, rangeEnd, availableDays, minDaysOff, blockedDates } = request
   const suggestions: VacationPeriod[] = []
 
   // Validation
@@ -102,6 +102,11 @@ export function optimizeVacation(request: VacationRequest): OptimizationResult {
 
       // Vérifier si on a assez de jours de congés disponibles
       if (workDaysNeeded > 0 && workDaysNeeded <= availableDays) {
+        // Vérifier le minimum de jours off si spécifié
+        if (minDaysOff && totalDaysOff < minDaysOff) {
+          continue
+        }
+
         const efficiency = totalDaysOff / workDaysNeeded
 
         suggestions.push({
@@ -147,9 +152,15 @@ export function optimizeVacation(request: VacationRequest): OptimizationResult {
 
   // Si aucune suggestion trouvée
   if (filteredSuggestions.length === 0) {
+    let message = "Aucune période optimale trouvée avec vos critères."
+    if (minDaysOff && minDaysOff > 0) {
+      message += ` Essayez de réduire le nombre minimum de jours off (actuellement ${minDaysOff}) ou d'élargir votre plage de dates.`
+    } else {
+      message += " Essayez d'élargir votre plage de dates ou de débloquer certaines dates."
+    }
     return {
       suggestions: [],
-      message: "Aucune période optimale trouvée avec vos critères. Essayez d'élargir votre plage de dates ou de débloquer certaines dates."
+      message: message
     }
   }
 
