@@ -1,4 +1,4 @@
-import { TShirtColor, TShirtSize, FontFamily } from '@/types';
+import { TShirtColor, TShirtSize, FontFamily, LogoPosition } from '@/types';
 
 // T-Shirt configuration
 export const TSHIRT_COLORS: { value: TShirtColor; label: string; hex: string }[] = [
@@ -50,6 +50,57 @@ export const DESIGN_CONSTRAINTS = {
   CANVAS_HEIGHT: 500,
   PRINT_AREA_WIDTH: 350,
   PRINT_AREA_HEIGHT: 400,
+};
+
+// Logo positions with predefined coordinates and sizes
+export const LOGO_POSITIONS: Record<LogoPosition, {
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  side: 'front' | 'back';
+}> = {
+  'center-chest': {
+    label: 'Centre poitrine',
+    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 60,
+    y: 150,
+    width: 120,
+    height: 120,
+    side: 'front',
+  },
+  'left-chest': {
+    label: 'Gauche poitrine (petit)',
+    x: 80,
+    y: 120,
+    width: 60,
+    height: 60,
+    side: 'front',
+  },
+  'right-chest': {
+    label: 'Droit poitrine (petit)',
+    x: 260,
+    y: 120,
+    width: 60,
+    height: 60,
+    side: 'front',
+  },
+  'back-center': {
+    label: 'Centre dos',
+    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 75,
+    y: 200,
+    width: 150,
+    height: 150,
+    side: 'back',
+  },
+  'back-upper': {
+    label: 'Haut du dos',
+    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 50,
+    y: 100,
+    width: 100,
+    height: 100,
+    side: 'back',
+  },
 };
 
 // Mock designs (to be replaced with actual design data)

@@ -58,9 +58,9 @@ export function EditorToolbar() {
 
       {/* Text editor */}
       {text && (
-        <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 space-y-3">
+        <div className="p-4 border border-gray-300 rounded-lg bg-white space-y-3">
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Éditer le texte</h3>
+            <h3 className="font-semibold text-gray-900">Éditer le texte</h3>
             <button
               onClick={() => removeText()}
               className="text-red-600 hover:text-red-700 text-sm"
@@ -71,7 +71,7 @@ export function EditorToolbar() {
 
           {/* Text input */}
           <div>
-            <label className="block text-sm font-medium mb-1">Texte</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Texte</label>
             <input
               type="text"
               value={text.content}
@@ -87,7 +87,7 @@ export function EditorToolbar() {
 
           {/* Font selector */}
           <div>
-            <label className="block text-sm font-medium mb-1">Police</label>
+            <label className="block text-sm font-medium text-gray-900 mb-1">Police</label>
             <select
               value={text.font}
               onChange={(e) => updateText({ font: e.target.value as FontFamily })}
@@ -103,7 +103,7 @@ export function EditorToolbar() {
 
           {/* Font size */}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Taille: {text.fontSize}px
             </label>
             <input
@@ -118,7 +118,7 @@ export function EditorToolbar() {
 
           {/* Color picker */}
           <div>
-            <label className="block text-sm font-medium mb-2">Couleur</label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">Couleur</label>
             <div className="grid grid-cols-5 gap-2">
               {TEXT_COLORS.map((colorOption) => (
                 <button
@@ -140,9 +140,9 @@ export function EditorToolbar() {
 
       {/* Design controls */}
       {design && (
-        <div className="p-4 border border-gray-300 rounded-lg bg-gray-50">
+        <div className="p-4 border border-gray-300 rounded-lg bg-white">
           <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Design ajouté</h3>
+            <h3 className="font-semibold text-gray-900">Design ajouté</h3>
             <button
               onClick={() => removeDesign()}
               className="text-red-600 hover:text-red-700 text-sm"

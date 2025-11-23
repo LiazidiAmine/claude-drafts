@@ -15,7 +15,7 @@ export function ProductSelector() {
 
       {/* Color selection */}
       <div>
-        <label className="block text-sm font-medium mb-3">
+        <label className="block text-sm font-medium text-gray-900 mb-3">
           Couleur: {TSHIRT_COLORS.find((c) => c.value === tshirt.color)?.label}
         </label>
         <div className="flex gap-3">
@@ -37,7 +37,7 @@ export function ProductSelector() {
 
       {/* Size selection */}
       <div>
-        <label className="block text-sm font-medium mb-3">
+        <label className="block text-sm font-medium text-gray-900 mb-3">
           Taille: {tshirt.size}
         </label>
         <div className="grid grid-cols-6 gap-2">

@@ -11,11 +11,15 @@ export interface TShirt {
 }
 
 // Design types
+export type DesignType = 'free' | 'logo' | 'pattern';
+export type LogoPosition = 'center-chest' | 'left-chest' | 'right-chest' | 'back-center' | 'back-upper';
+
 export interface Design {
   id: string;
   name: string;
   imageUrl: string;
   thumbnailUrl: string;
+  type?: DesignType; // For categorization
 }
 
 // Text customization
@@ -37,16 +41,20 @@ export interface DesignElement {
   id: string;
   designId: string;
   imageUrl: string;
+  placementType: DesignType; // 'free', 'logo', or 'pattern'
+  logoPosition?: LogoPosition; // Only for logo type
   x: number;
   y: number;
   width: number;
   height: number;
   rotation: number;
+  locked?: boolean; // For logo positions - prevent movement
 }
 
 // Canvas state for each side
 export interface CanvasState {
-  design?: DesignElement;
+  pattern?: DesignElement; // Background pattern that repeats
+  design?: DesignElement; // Free placement design or logo
   text?: TextElement;
 }
 

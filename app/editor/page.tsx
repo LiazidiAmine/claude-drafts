@@ -35,7 +35,7 @@ export default function EditorPage() {
 
             {/* Side toggle */}
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <label className="block text-sm font-medium mb-3">
+              <label className="block text-sm font-medium text-gray-900 mb-3">
                 Zone d'impression
               </label>
               <div className="grid grid-cols-2 gap-2">
