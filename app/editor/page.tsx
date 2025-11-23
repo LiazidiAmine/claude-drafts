@@ -1,15 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { useCustomizerStore } from '@/store/useCustomizerStore';
-import { ThreeScene } from '@/components/ThreeScene';
 import { DesignCanvas, EditorToolbar } from '@/components/DesignEditor';
 import { ProductSelector } from '@/components/ProductSelector';
-import { PrintSide } from '@/types';
 
 export default function EditorPage() {
   const { tshirt, currentSide, setCurrentSide } = useCustomizerStore();
-  const [view, setView] = useState<'2d' | '3d'>('2d');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,47 +59,14 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Center - Canvas/3D view */}
+          {/* Center - Canvas 2D */}
           <div className="lg:col-span-1">
-            {/* View toggle */}
-            <div className="mb-4 flex justify-center gap-2">
-              <button
-                onClick={() => setView('2d')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === '2d'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Vue 2D (Édition)
-              </button>
-              <button
-                onClick={() => setView('3d')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  view === '3d'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Vue 3D (Aperçu)
-              </button>
-            </div>
-
-            {/* Canvas or 3D scene */}
             <div className="flex justify-center">
-              {view === '2d' ? (
-                <DesignCanvas />
-              ) : (
-                <div className="w-full h-[500px]">
-                  <ThreeScene color={tshirt.color} currentSide={currentSide} />
-                </div>
-              )}
+              <DesignCanvas color={tshirt.color} />
             </div>
 
             <p className="text-sm text-gray-500 text-center mt-4">
-              {view === '2d'
-                ? 'Glissez-déposez les éléments pour les positionner. Utilisez les poignées pour redimensionner et faire pivoter.'
-                : 'Utilisez la souris pour faire pivoter le t-shirt et voir le rendu 3D.'}
+              Glissez-déposez les éléments pour les positionner. Utilisez les poignées pour redimensionner et faire pivoter.
             </p>
           </div>
 

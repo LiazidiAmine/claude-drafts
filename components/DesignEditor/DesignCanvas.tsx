@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer, Text, Transformer, Rect, Group, Line } from 'react-konva';
 import { useCustomizerStore } from '@/store/useCustomizerStore';
-import { DESIGN_CONSTRAINTS, FONTS } from '@/lib/constants';
+import { DESIGN_CONSTRAINTS, FONTS, TSHIRT_COLORS } from '@/lib/constants';
+import { TShirtColor } from '@/types';
 import Konva from 'konva';
 
 interface DesignCanvasProps {
   className?: string;
+  color?: TShirtColor;
 }
 
-export function DesignCanvas({ className }: DesignCanvasProps) {
+export function DesignCanvas({ className, color = 'white' }: DesignCanvasProps) {
   const { front, back, currentSide, updateDesign, updateText } = useCustomizerStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -26,7 +28,10 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
 
   const currentCanvas = currentSide === 'front' ? front : back;
-  const { design, text } = currentCanvas;
+  const { design, text} = currentCanvas;
+
+  // Get t-shirt color hex
+  const colorHex = TSHIRT_COLORS.find((c) => c.value === color)?.hex || '#FFFFFF';
 
   // Attach transformer to selected element
   useEffect(() => {
@@ -231,17 +236,15 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             fill="#F9FAFB"
           />
 
-          {/* T-Shirt Silhouette - Modern design with gradient and depth */}
+          {/* T-Shirt Silhouette - Modern design with color */}
           <Group listening={false}>
-            {/* Main body with gradient */}
+            {/* Main body */}
             <Rect
               x={75}
               y={80}
               width={250}
               height={350}
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: 0, y: 350 }}
-              fillLinearGradientColorStops={[0, '#FFFFFF', 0.5, '#F9FAFB', 1, '#F3F4F6']}
+              fill={colorHex}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[10, 10, 15, 15]}
@@ -251,15 +254,13 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               shadowOffsetY={2}
             />
 
-            {/* Left sleeve with gradient */}
+            {/* Left sleeve */}
             <Rect
               x={30}
               y={80}
               width={50}
               height={120}
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: 50, y: 0 }}
-              fillLinearGradientColorStops={[0, '#F9FAFB', 1, '#FFFFFF']}
+              fill={colorHex}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[8, 0, 0, 8]}
@@ -269,15 +270,13 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               shadowOffsetY={2}
             />
 
-            {/* Right sleeve with gradient */}
+            {/* Right sleeve */}
             <Rect
               x={320}
               y={80}
               width={50}
               height={120}
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: 50, y: 0 }}
-              fillLinearGradientColorStops={[0, '#FFFFFF', 1, '#F9FAFB']}
+              fill={colorHex}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[0, 8, 8, 0]}
@@ -287,15 +286,13 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               shadowOffsetY={2}
             />
 
-            {/* Collar/Neck with gradient */}
+            {/* Collar/Neck */}
             <Rect
               x={175}
               y={70}
               width={50}
               height={30}
-              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-              fillLinearGradientEndPoint={{ x: 0, y: 30 }}
-              fillLinearGradientColorStops={[0, '#FFFFFF', 1, '#F9FAFB']}
+              fill={colorHex}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[5, 5, 0, 0]}
