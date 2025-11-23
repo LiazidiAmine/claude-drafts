@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { optimizeVacation, formatVacationPeriod } from '@/lib/optimizer'
+import { isWeekend, isFrenchHoliday, isWorkDay } from '@/lib/holidays'
 import { VacationPeriod } from '@/types'
-import { Calendar, TrendingUp, Clock, Sparkles, X, Info } from 'lucide-react'
+import { Calendar, TrendingUp, Clock, Sparkles, X, Info, ChevronDown, ChevronUp } from 'lucide-react'
 
 export function VacationOptimizer() {
   const [rangeStart, setRangeStart] = useState('')
@@ -21,6 +22,7 @@ export function VacationOptimizer() {
   const [message, setMessage] = useState<string | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [expandedSuggestion, setExpandedSuggestion] = useState<number | null>(null)
 
   const handleAddBlockedDate = () => {
     if (newBlockedDate) {
@@ -103,6 +105,56 @@ export function VacationOptimizer() {
       month: 'short',
       year: 'numeric'
     })
+  }
+
+  const toggleExpanded = (index: number) => {
+    setExpandedSuggestion(expandedSuggestion === index ? null : index)
+  }
+
+  const getPeriodDetails = (suggestion: VacationPeriod) => {
+    const days: {
+      date: Date
+      type: 'vacation' | 'weekend' | 'holiday' | 'included'
+      dayName: string
+      dateStr: string
+    }[] = []
+
+    const current = new Date(suggestion.startDate)
+    const end = new Date(suggestion.endDate)
+
+    while (current <= end) {
+      const dayName = current.toLocaleDateString('fr-FR', { weekday: 'short' })
+      const dateStr = current.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+
+      let type: 'vacation' | 'weekend' | 'holiday' | 'included' = 'included'
+
+      if (isFrenchHoliday(current)) {
+        type = 'holiday'
+      } else if (isWeekend(current)) {
+        type = 'weekend'
+      } else if (isWorkDay(current)) {
+        type = 'vacation'
+      }
+
+      days.push({
+        date: new Date(current),
+        type,
+        dayName,
+        dateStr
+      })
+
+      current.setDate(current.getDate() + 1)
+    }
+
+    // Calculer les statistiques
+    const stats = {
+      vacationDays: days.filter(d => d.type === 'vacation').length,
+      weekendDays: days.filter(d => d.type === 'weekend').length,
+      holidayDays: days.filter(d => d.type === 'holiday').length,
+      total: days.length
+    }
+
+    return { days, stats }
   }
 
   return (
@@ -347,7 +399,8 @@ export function VacationOptimizer() {
                         {formatVacationPeriod(suggestion)}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
+                      {/* Résumé */}
                       <div className="grid grid-cols-2 gap-6">
                         <div className="text-center p-4 bg-blue-50 rounded-lg">
                           <p className="text-sm text-gray-600 mb-2">Jours à poser</p>
@@ -364,6 +417,87 @@ export function VacationOptimizer() {
                           <p className="text-xs text-gray-500 mt-1">jours de repos</p>
                         </div>
                       </div>
+
+                      {/* Bouton pour voir le détail */}
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => toggleExpanded(index)}
+                      >
+                        {expandedSuggestion === index ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 mr-2" />
+                            Masquer le détail
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 mr-2" />
+                            Voir le détail du calendrier
+                          </>
+                        )}
+                      </Button>
+
+                      {/* Vue détaillée */}
+                      {expandedSuggestion === index && (() => {
+                        const { days, stats } = getPeriodDetails(suggestion)
+                        return (
+                          <div className="space-y-4 pt-4 border-t">
+                            {/* Légende */}
+                            <div className="flex flex-wrap gap-3 text-xs">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-4 rounded bg-blue-500"></div>
+                                <span>Congés à poser ({stats.vacationDays})</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-4 rounded bg-green-500"></div>
+                                <span>Weekends ({stats.weekendDays})</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-4 h-4 rounded bg-orange-500"></div>
+                                <span>Jours fériés ({stats.holidayDays})</span>
+                              </div>
+                            </div>
+
+                            {/* Calendrier */}
+                            <div className="grid grid-cols-7 gap-2">
+                              {days.map((day, idx) => {
+                                const bgColor =
+                                  day.type === 'vacation' ? 'bg-blue-500 text-white' :
+                                  day.type === 'weekend' ? 'bg-green-500 text-white' :
+                                  day.type === 'holiday' ? 'bg-orange-500 text-white' :
+                                  'bg-gray-200 text-gray-600'
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`flex flex-col items-center justify-center p-2 rounded-lg ${bgColor} text-center`}
+                                  >
+                                    <div className="text-[10px] font-semibold uppercase opacity-80">
+                                      {day.dayName}
+                                    </div>
+                                    <div className="text-sm font-bold">
+                                      {day.date.getDate()}
+                                    </div>
+                                    <div className="text-[9px] opacity-80">
+                                      {day.date.toLocaleDateString('fr-FR', { month: 'short' })}
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+
+                            {/* Message explicatif */}
+                            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                              <p>
+                                En posant <strong className="text-blue-600">{stats.vacationDays} jour(s) de congés</strong>,
+                                vous bénéficiez de <strong className="text-green-600">{stats.total} jours off consécutifs</strong> au total
+                                {stats.weekendDays > 0 && ` (incluant ${stats.weekendDays} jour(s) de weekend)`}
+                                {stats.holidayDays > 0 && ` et ${stats.holidayDays} jour(s) férié(s)`}.
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </CardContent>
                   </Card>
                 ))}
