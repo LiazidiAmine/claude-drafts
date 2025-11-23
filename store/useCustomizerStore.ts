@@ -26,14 +26,10 @@ interface CustomizerState {
   setTShirtSize: (size: TShirtSize) => void;
   setCurrentSide: (side: PrintSide) => void;
 
-  // Design actions (for free placement and logos)
+  // Design actions (simplified - emojis/icons only)
   addDesign: (design: DesignElement, side?: PrintSide) => void;
   updateDesign: (design: Partial<DesignElement>, side?: PrintSide) => void;
   removeDesign: (side?: PrintSide) => void;
-
-  // Pattern actions
-  addPattern: (pattern: DesignElement, side?: PrintSide) => void;
-  removePattern: (side?: PrintSide) => void;
 
   // Text actions
   addText: (text: TextElement, side?: PrintSide) => void;
@@ -141,26 +137,6 @@ export const useCustomizerStore = create<CustomizerState>((set, get) => ({
       [targetSide]: {
         ...state[targetSide],
         text: undefined,
-      },
-    }));
-  },
-
-  addPattern: (pattern, side) => {
-    const targetSide = side || get().currentSide;
-    set((state) => ({
-      [targetSide]: {
-        ...state[targetSide],
-        pattern,
-      },
-    }));
-  },
-
-  removePattern: (side) => {
-    const targetSide = side || get().currentSide;
-    set((state) => ({
-      [targetSide]: {
-        ...state[targetSide],
-        pattern: undefined,
       },
     }));
   },

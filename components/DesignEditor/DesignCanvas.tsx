@@ -15,7 +15,6 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [designImage, setDesignImage] = useState<HTMLImageElement | null>(null);
-  const [patternImage, setPatternImage] = useState<HTMLImageElement | null>(null);
 
   const stageRef = useRef<Konva.Stage>(null);
   const imageRef = useRef<Konva.Image>(null);
@@ -23,7 +22,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
 
   const currentCanvas = currentSide === 'front' ? front : back;
-  const { design, text, pattern } = currentCanvas;
+  const { design, text } = currentCanvas;
 
   // Load design image
   useEffect(() => {
@@ -43,27 +42,11 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     }
   }, [design?.imageUrl]);
 
-  // Load pattern image
-  useEffect(() => {
-    if (pattern?.imageUrl) {
-      const img = new window.Image();
-      img.src = pattern.imageUrl;
-      img.onload = () => {
-        setPatternImage(img);
-      };
-      img.onerror = () => {
-        setPatternImage(null);
-      };
-    } else {
-      setPatternImage(null);
-    }
-  }, [pattern?.imageUrl]);
-
   // Attach transformer to selected element
   useEffect(() => {
     if (!transformerRef.current) return;
 
-    if (selectedId === 'design' && imageRef.current && !design?.locked) {
+    if (selectedId === 'design' && imageRef.current) {
       transformerRef.current.nodes([imageRef.current]);
     } else if (selectedId === 'text' && textRef.current) {
       transformerRef.current.nodes([textRef.current]);
@@ -72,10 +55,10 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     }
 
     transformerRef.current.getLayer()?.batchDraw();
-  }, [selectedId, design?.locked]);
+  }, [selectedId]);
 
   const handleDesignDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    if (!design || design.locked) return;
+    if (!design) return;
     updateDesign({
       x: e.target.x(),
       y: e.target.y(),
@@ -83,7 +66,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   };
 
   const handleDesignTransformEnd = () => {
-    if (!design || design.locked || !imageRef.current) return;
+    if (!design || !imageRef.current) return;
 
     const node = imageRef.current;
     const scaleX = node.scaleX();
@@ -220,26 +203,6 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             />
           </Group>
 
-          {/* Pattern layer (if exists) - repeating background */}
-          {pattern && patternImage && (
-            <Group>
-              {/* Create a tiled pattern effect */}
-              {Array.from({ length: Math.ceil(DESIGN_CONSTRAINTS.CANVAS_HEIGHT / 100) }).map((_, row) =>
-                Array.from({ length: Math.ceil(DESIGN_CONSTRAINTS.CANVAS_WIDTH / 100) }).map((_, col) => (
-                  <KonvaImage
-                    key={`pattern-${row}-${col}`}
-                    image={patternImage}
-                    x={col * 100}
-                    y={row * 100}
-                    width={100}
-                    height={100}
-                    opacity={0.3}
-                  />
-                ))
-              )}
-            </Group>
-          )}
-
           {/* Print area guide */}
           <Rect
             x={(DESIGN_CONSTRAINTS.CANVAS_WIDTH - DESIGN_CONSTRAINTS.PRINT_AREA_WIDTH) / 2}
@@ -275,12 +238,12 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
                 width={design.width}
                 height={design.height}
                 rotation={design.rotation}
-                draggable={!design.locked}
+                draggable
                 onClick={() => setSelectedId('design')}
                 onTap={() => setSelectedId('design')}
                 onDragEnd={handleDesignDragEnd}
                 onTransformEnd={handleDesignTransformEnd}
-                shadowColor={design.locked ? '#3B82F6' : '#A855F7'}
+                shadowColor="#A855F7"
                 shadowBlur={selectedId === 'design' ? 15 : 5}
                 shadowOpacity={0.5}
               />
@@ -289,12 +252,12 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               <Group
                 x={design.x}
                 y={design.y}
-                draggable={!design.locked}
+                draggable
                 onClick={() => setSelectedId('design')}
                 onTap={() => setSelectedId('design')}
               >
                 <Text
-                  text={design.locked ? '⭐' : '🎨'}
+                  text={design.emoji || '🎨'}
                   width={design.width}
                   height={design.height}
                   fontSize={design.width * 0.7}
@@ -326,17 +289,6 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               shadowBlur={selectedId === 'text' ? 15 : 5}
               shadowOpacity={0.5}
               fontStyle="bold"
-            />
-          )}
-
-          {/* Locked icon for locked designs */}
-          {design && design.locked && (
-            <Text
-              text="🔒"
-              x={design.x + design.width - 20}
-              y={design.y - 10}
-              fontSize={20}
-              listening={false}
             />
           )}
 

@@ -1,4 +1,4 @@
-import { TShirtColor, TShirtSize, FontFamily, LogoPosition } from '@/types';
+import { TShirtColor, TShirtSize, FontFamily, Design } from '@/types';
 
 // T-Shirt configuration
 export const TSHIRT_COLORS: { value: TShirtColor; label: string; hex: string }[] = [
@@ -52,61 +52,57 @@ export const DESIGN_CONSTRAINTS = {
   PRINT_AREA_HEIGHT: 400,
 };
 
-// Logo positions with predefined coordinates and sizes
-export const LOGO_POSITIONS: Record<LogoPosition, {
-  label: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  side: 'front' | 'back';
-}> = {
-  'center-chest': {
-    label: 'Centre poitrine',
-    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 60,
-    y: 150,
-    width: 120,
-    height: 120,
-    side: 'front',
-  },
-  'left-chest': {
-    label: 'Gauche poitrine (petit)',
-    x: 80,
-    y: 120,
-    width: 60,
-    height: 60,
-    side: 'front',
-  },
-  'right-chest': {
-    label: 'Droit poitrine (petit)',
-    x: 260,
-    y: 120,
-    width: 60,
-    height: 60,
-    side: 'front',
-  },
-  'back-center': {
-    label: 'Centre dos',
-    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 75,
-    y: 200,
-    width: 150,
-    height: 150,
-    side: 'back',
-  },
-  'back-upper': {
-    label: 'Haut du dos',
-    x: DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2 - 50,
-    y: 100,
-    width: 100,
-    height: 100,
-    side: 'back',
-  },
+// Pricing for Algerian market (in DZD - Algerian Dinar)
+export const PRICING = {
+  BASE_PRICE: 1800, // Prix de base du t-shirt personnalisé
+  DESIGN_PRICE: 200, // Supplément pour ajout de design
+  TEXT_PRICE: 0, // Texte inclus gratuitement
+  SHIPPING: 300, // Frais de livraison (Algérie)
 };
 
-// Mock designs (to be replaced with actual design data)
-export const MOCK_DESIGNS = Array.from({ length: 20 }, (_, i) => ({
-  id: `design-${i + 1}`,
-  name: `Design ${i + 1}`,
-  imageUrl: `/designs/design-${i + 1}.png`,
-  thumbnailUrl: `/designs/thumbnails/design-${i + 1}.png`,
-}));
+// Price display helpers
+export const formatPrice = (price: number) => {
+  return `${price.toLocaleString('fr-DZ')} DA`;
+};
+
+// Design library - Emojis and simple icons
+export const EMOJI_DESIGNS: Design[] = [
+  // Smileys & Emotions
+  { id: 'emoji-1', name: 'Sourire', emoji: '😊' },
+  { id: 'emoji-2', name: 'Cool', emoji: '😎' },
+  { id: 'emoji-3', name: 'Flamme', emoji: '🔥' },
+  { id: 'emoji-4', name: 'Cœur', emoji: '❤️' },
+  { id: 'emoji-5', name: 'Étoile', emoji: '⭐' },
+
+  // Sports & Activities
+  { id: 'emoji-6', name: 'Football', emoji: '⚽' },
+  { id: 'emoji-7', name: 'Basketball', emoji: '🏀' },
+  { id: 'emoji-8', name: 'Musique', emoji: '🎵' },
+  { id: 'emoji-9', name: 'Gaming', emoji: '🎮' },
+  { id: 'emoji-10', name: 'Café', emoji: '☕' },
+
+  // Symbols
+  { id: 'emoji-11', name: 'Paix', emoji: '✌️' },
+  { id: 'emoji-12', name: 'Force', emoji: '💪' },
+  { id: 'emoji-13', name: 'Ok', emoji: '👌' },
+  { id: 'emoji-14', name: 'Victory', emoji: '✨' },
+  { id: 'emoji-15', name: 'Lightning', emoji: '⚡' },
+
+  // Animals
+  { id: 'emoji-16', name: 'Lion', emoji: '🦁' },
+  { id: 'emoji-17', name: 'Aigle', emoji: '🦅' },
+  { id: 'emoji-18', name: 'Loup', emoji: '🐺' },
+
+  // Food & Drinks
+  { id: 'emoji-19', name: 'Pizza', emoji: '🍕' },
+  { id: 'emoji-20', name: 'Burger', emoji: '🍔' },
+
+  // More expressions
+  { id: 'emoji-21', name: 'Rire', emoji: '😂' },
+  { id: 'emoji-22', name: 'Amour', emoji: '😍' },
+  { id: 'emoji-23', name: 'Thinking', emoji: '🤔' },
+  { id: 'emoji-24', name: 'Party', emoji: '🎉' },
+
+  // Algerian pride (simple icons)
+  { id: 'emoji-25', name: 'Drapeau DZ', emoji: '🇩🇿' },
+];

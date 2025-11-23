@@ -10,16 +10,13 @@ export interface TShirt {
   price?: number; // To be defined later
 }
 
-// Design types
-export type DesignType = 'free' | 'logo' | 'pattern';
-export type LogoPosition = 'center-chest' | 'left-chest' | 'right-chest' | 'back-center' | 'back-upper';
-
+// Design types (simplified - emojis and icons only)
 export interface Design {
   id: string;
   name: string;
-  imageUrl: string;
-  thumbnailUrl: string;
-  type?: DesignType; // For categorization
+  emoji?: string; // For emoji designs
+  icon?: string; // For icon designs (SVG path or icon name)
+  imageUrl?: string; // For future custom images
 }
 
 // Text customization
@@ -36,25 +33,22 @@ export interface TextElement {
   rotation: number;
 }
 
-// Design element on canvas
+// Design element on canvas (simplified)
 export interface DesignElement {
   id: string;
   designId: string;
-  imageUrl: string;
-  placementType: DesignType; // 'free', 'logo', or 'pattern'
-  logoPosition?: LogoPosition; // Only for logo type
+  emoji?: string; // Emoji character
+  icon?: string; // Icon name/path
   x: number;
   y: number;
   width: number;
   height: number;
   rotation: number;
-  locked?: boolean; // For logo positions - prevent movement
 }
 
-// Canvas state for each side
+// Canvas state for each side (simplified)
 export interface CanvasState {
-  pattern?: DesignElement; // Background pattern that repeats
-  design?: DesignElement; // Free placement design or logo
+  design?: DesignElement; // Emoji or icon design
   text?: TextElement;
 }
 
