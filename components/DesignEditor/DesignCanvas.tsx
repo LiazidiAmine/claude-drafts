@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Stage, Layer, Text, Transformer, Rect, Group } from 'react-konva';
+import { Stage, Layer, Text, Transformer, Rect, Group, Line } from 'react-konva';
 import { useCustomizerStore } from '@/store/useCustomizerStore';
 import { DESIGN_CONSTRAINTS, FONTS } from '@/lib/constants';
 import Konva from 'konva';
@@ -14,6 +14,11 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   const { front, back, currentSide, updateDesign, updateText } = useCustomizerStore();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [alignmentGuides, setAlignmentGuides] = useState({
+    vertical: false,
+    horizontal: false,
+  });
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
 
   const stageRef = useRef<Konva.Stage>(null);
   const emojiRef = useRef<Konva.Text>(null);
@@ -46,11 +51,42 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     height: 300,
   };
 
+  // Snap configuration
+  const SNAP_THRESHOLD = 10; // pixels
+  const centerX = DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2;
+  const centerY = DESIGN_CONSTRAINTS.CANVAS_HEIGHT / 2;
+
   const constrainToStagePrintableArea = (x: number, y: number, width: number, height: number) => {
     return {
       x: Math.max(PRINTABLE_AREA.x, Math.min(x, PRINTABLE_AREA.x + PRINTABLE_AREA.width - width)),
       y: Math.max(PRINTABLE_AREA.y, Math.min(y, PRINTABLE_AREA.y + PRINTABLE_AREA.height - height)),
     };
+  };
+
+  // Snap to center with alignment guides
+  const snapToCenter = (x: number, y: number, width: number, height: number) => {
+    const elementCenterX = x + width / 2;
+    const elementCenterY = y + height / 2;
+
+    let snappedX = x;
+    let snappedY = y;
+    const guides = { vertical: false, horizontal: false };
+
+    // Snap to center X
+    if (Math.abs(elementCenterX - centerX) < SNAP_THRESHOLD) {
+      snappedX = centerX - width / 2;
+      guides.vertical = true;
+    }
+
+    // Snap to center Y
+    if (Math.abs(elementCenterY - centerY) < SNAP_THRESHOLD) {
+      snappedY = centerY - height / 2;
+      guides.horizontal = true;
+    }
+
+    setAlignmentGuides(guides);
+
+    return { x: snappedX, y: snappedY };
   };
 
   const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -61,15 +97,33 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     }
   };
 
+  const handleDesignDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+    if (!design) return;
+    snapToCenter(e.target.x(), e.target.y(), design.width, design.height);
+    setDragPosition({ x: Math.round(e.target.x()), y: Math.round(e.target.y()) });
+  };
+
   const handleDesignDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (!design) return;
+
+    // Apply snap
+    const snapped = snapToCenter(e.target.x(), e.target.y(), design.width, design.height);
+
+    // Apply constraints
     const constrained = constrainToStagePrintableArea(
-      e.target.x(),
-      e.target.y(),
+      snapped.x,
+      snapped.y,
       design.width,
       design.height
     );
+
     updateDesign(constrained);
+
+    // Hide indicators after a delay
+    setDragPosition(null);
+    setTimeout(() => {
+      setAlignmentGuides({ vertical: false, horizontal: false });
+    }, 1000);
   };
 
   const handleDesignTransformEnd = () => {
@@ -92,15 +146,38 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
     });
   };
 
+  const handleTextDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+    if (!text) return;
+    snapToCenter(e.target.x(), e.target.y(), e.target.width(), e.target.height());
+    setDragPosition({ x: Math.round(e.target.x()), y: Math.round(e.target.y()) });
+  };
+
   const handleTextDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (!text) return;
-    const constrained = constrainToStagePrintableArea(
+
+    // Apply snap
+    const snapped = snapToCenter(
       e.target.x(),
       e.target.y(),
       e.target.width(),
       e.target.height()
     );
+
+    // Apply constraints
+    const constrained = constrainToStagePrintableArea(
+      snapped.x,
+      snapped.y,
+      e.target.width(),
+      e.target.height()
+    );
+
     updateText(constrained);
+
+    // Hide indicators after a delay
+    setDragPosition(null);
+    setTimeout(() => {
+      setAlignmentGuides({ vertical: false, horizontal: false });
+    }, 1000);
   };
 
   const handleTextTransformEnd = () => {
@@ -125,7 +202,19 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
   };
 
   return (
-    <div className={`rounded-lg bg-white shadow-lg ${className}`}>
+    <div className={`rounded-lg bg-white shadow-lg ${className} relative`}>
+      {/* Position indicator */}
+      {dragPosition && (
+        <div className="absolute top-4 right-4 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-xl z-50 font-mono text-sm font-bold">
+          <div className="flex items-center gap-2">
+            <span className="text-xs opacity-70">Position:</span>
+            <span>X: {dragPosition.x}</span>
+            <span className="opacity-50">|</span>
+            <span>Y: {dragPosition.y}</span>
+          </div>
+        </div>
+      )}
+
       <Stage
         ref={stageRef}
         width={DESIGN_CONSTRAINTS.CANVAS_WIDTH}
@@ -142,93 +231,137 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             fill="#F9FAFB"
           />
 
-          {/* T-Shirt Silhouette */}
+          {/* T-Shirt Silhouette - Modern design with gradient and depth */}
           <Group listening={false}>
-            {/* Main body */}
+            {/* Main body with gradient */}
             <Rect
               x={75}
               y={80}
               width={250}
               height={350}
-              fill="#FFFFFF"
+              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+              fillLinearGradientEndPoint={{ x: 0, y: 350 }}
+              fillLinearGradientColorStops={[0, '#FFFFFF', 0.5, '#F9FAFB', 1, '#F3F4F6']}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[10, 10, 15, 15]}
+              shadowColor="rgba(0,0,0,0.08)"
+              shadowBlur={15}
+              shadowOffsetX={0}
+              shadowOffsetY={2}
             />
 
-            {/* Left sleeve */}
+            {/* Left sleeve with gradient */}
             <Rect
               x={30}
               y={80}
               width={50}
               height={120}
-              fill="#FFFFFF"
+              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+              fillLinearGradientEndPoint={{ x: 50, y: 0 }}
+              fillLinearGradientColorStops={[0, '#F9FAFB', 1, '#FFFFFF']}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[8, 0, 0, 8]}
+              shadowColor="rgba(0,0,0,0.06)"
+              shadowBlur={10}
+              shadowOffsetX={-2}
+              shadowOffsetY={2}
             />
 
-            {/* Right sleeve */}
+            {/* Right sleeve with gradient */}
             <Rect
               x={320}
               y={80}
               width={50}
               height={120}
-              fill="#FFFFFF"
+              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+              fillLinearGradientEndPoint={{ x: 50, y: 0 }}
+              fillLinearGradientColorStops={[0, '#FFFFFF', 1, '#F9FAFB']}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[0, 8, 8, 0]}
+              shadowColor="rgba(0,0,0,0.06)"
+              shadowBlur={10}
+              shadowOffsetX={2}
+              shadowOffsetY={2}
             />
 
-            {/* Collar/Neck - V shape */}
+            {/* Collar/Neck with gradient */}
             <Rect
               x={175}
               y={70}
               width={50}
               height={30}
-              fill="#FFFFFF"
+              fillLinearGradientStartPoint={{ x: 0, y: 0 }}
+              fillLinearGradientEndPoint={{ x: 0, y: 30 }}
+              fillLinearGradientColorStops={[0, '#FFFFFF', 1, '#F9FAFB']}
               stroke="#D1D5DB"
               strokeWidth={2}
               cornerRadius={[5, 5, 0, 0]}
             />
 
+            {/* Inner shadow overlay for depth on main body */}
+            <Rect
+              x={77}
+              y={82}
+              width={246}
+              height={346}
+              fill="transparent"
+              stroke="rgba(0,0,0,0.03)"
+              strokeWidth={1}
+              cornerRadius={[10, 10, 15, 15]}
+            />
+
+            {/* Subtle stitching detail */}
+            <Rect
+              x={80}
+              y={85}
+              width={240}
+              height={340}
+              fill="transparent"
+              stroke="rgba(0,0,0,0.02)"
+              strokeWidth={1}
+              dash={[5, 5]}
+              cornerRadius={[8, 8, 13, 13]}
+            />
+
             {/* Label on silhouette */}
             <Text
-              text="T-SHIRT"
+              text="Zone Imprimable"
               x={DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2}
-              y={420}
-              fontSize={10}
+              y={440}
+              fontSize={11}
               fontFamily="Arial"
               fill="#9CA3AF"
               align="center"
-              offsetX={25}
+              offsetX={42}
               fontStyle="bold"
+              letterSpacing={0.5}
             />
           </Group>
 
-          {/* Print area guide */}
-          <Rect
-            x={(DESIGN_CONSTRAINTS.CANVAS_WIDTH - DESIGN_CONSTRAINTS.PRINT_AREA_WIDTH) / 2}
-            y={(DESIGN_CONSTRAINTS.CANVAS_HEIGHT - DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT) / 2}
-            width={DESIGN_CONSTRAINTS.PRINT_AREA_WIDTH}
-            height={DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT}
-            stroke="#93C5FD"
-            strokeWidth={3}
-            dash={[10, 5]}
-          />
-
-          {/* Helper text for print area */}
-          <Text
-            text="Zone d'impression"
-            x={DESIGN_CONSTRAINTS.CANVAS_WIDTH / 2}
-            y={(DESIGN_CONSTRAINTS.CANVAS_HEIGHT - DESIGN_CONSTRAINTS.PRINT_AREA_HEIGHT) / 2 - 20}
-            fontSize={12}
-            fontFamily="Arial"
-            fill="#60A5FA"
-            fontStyle="bold"
-            align="center"
-            offsetX={60}
-          />
+          {/* Alignment Guides - Canva style */}
+          {alignmentGuides.vertical && (
+            <Line
+              points={[centerX, 0, centerX, DESIGN_CONSTRAINTS.CANVAS_HEIGHT]}
+              stroke="#EF4444"
+              strokeWidth={2}
+              dash={[10, 5]}
+              listening={false}
+              opacity={0.8}
+            />
+          )}
+          {alignmentGuides.horizontal && (
+            <Line
+              points={[0, centerY, DESIGN_CONSTRAINTS.CANVAS_WIDTH, centerY]}
+              stroke="#EF4444"
+              strokeWidth={2}
+              dash={[10, 5]}
+              listening={false}
+              opacity={0.8}
+            />
+          )}
 
           {/* Design emoji */}
           {design && (
@@ -247,6 +380,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               draggable
               onClick={() => setSelectedId('design')}
               onTap={() => setSelectedId('design')}
+              onDragMove={handleDesignDragMove}
               onDragEnd={handleDesignDragEnd}
               onTransformEnd={handleDesignTransformEnd}
               shadowColor="#A855F7"
@@ -269,6 +403,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               draggable
               onClick={() => setSelectedId('text')}
               onTap={() => setSelectedId('text')}
+              onDragMove={handleTextDragMove}
               onDragEnd={handleTextDragEnd}
               onTransformEnd={handleTextTransformEnd}
               shadowColor="#10B981"
@@ -278,7 +413,7 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
             />
           )}
 
-          {/* Transformer */}
+          {/* Modern Transformer with dynamic colors */}
           <Transformer
             ref={transformerRef}
             boundBoxFunc={(oldBox, newBox) => {
@@ -288,12 +423,31 @@ export function DesignCanvas({ className }: DesignCanvasProps) {
               }
               return newBox;
             }}
-            borderStroke="#3B82F6"
-            borderStrokeWidth={3}
-            anchorStroke="#3B82F6"
+            // Dynamic colors based on selected element type
+            borderStroke={selectedId === 'design' ? '#A855F7' : '#10B981'}
+            borderStrokeWidth={4}
+            borderDash={[]}
+            // Modern circular anchors
+            anchorStroke={selectedId === 'design' ? '#A855F7' : '#10B981'}
             anchorFill="#FFFFFF"
-            anchorSize={12}
-            anchorCornerRadius={6}
+            anchorSize={16}
+            anchorCornerRadius={8}
+            anchorStrokeWidth={3}
+            // Rotation anchor
+            rotationSnaps={[0, 45, 90, 135, 180, 225, 270, 315]}
+            rotateAnchorOffset={30}
+            // Enable animations
+            keepRatio={false}
+            enabledAnchors={[
+              'top-left',
+              'top-right',
+              'bottom-left',
+              'bottom-right',
+              'middle-left',
+              'middle-right',
+              'top-center',
+              'bottom-center',
+            ]}
           />
         </Layer>
       </Stage>
